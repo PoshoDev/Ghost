@@ -25,8 +25,9 @@ def find_track(track):
     if os.path.exists(datafile):
         with open(datafile, "r") as file:
             data = json.load(file)
-            if track in data["tracks"]:
-                return True
+            for t in data["tracks"]:
+                if t["name"] == track:
+                    return True
     return False
 
 # Adds a track to the JSON file.
@@ -42,6 +43,9 @@ def add_track(track, paths):
                 data["tracks"].append(newtrack)
                 with open(datafile, "w") as file:
                     json.dump(data, file)
+                    print(f"Added track '{track}' to '{datafile}'!")
+            else:
+                print(f"Track '{track}' already exists in '{datafile}'!")
 
 if __name__ == "__main__":
     main(sys.argv)
