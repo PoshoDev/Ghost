@@ -5,13 +5,14 @@ import os
 import sys
 import time
 import shutil
+from win10toast import ToastNotifier
 
 datafile = "data.json"
 
 def main(args):
     make_datafile()
     if len(args) == 1:
-        show_help()
+        default()
     elif args[1] == "help":
         show_help()
     elif args[1] == "add":
@@ -153,8 +154,10 @@ def sync_track(name):
                         with open(datafile, "w") as file:
                             json.dump(data, file)
                             print(f"Synced track '{track['name']}'!")
+                            return True
                     else:
                         print(f"Track '{track['name']}' is up to date!")
+    return False
 
 # Shows all the track names.
 def show_tracks():
@@ -163,7 +166,6 @@ def show_tracks():
             data = json.load(file)
             for track in data["tracks"]:
                 print(track["name"])
-
 
 # Shows the info for a given track.
 def show_track(name):
@@ -179,19 +181,37 @@ def show_track(name):
                     for path in track["paths"]:
                         print(path)
 
-# Syncs all tracks.
+# Syncs all tracks and returns a list of the updated track names.
 def sync_all():
     if os.path.exists(datafile):
         with open(datafile, "r") as file:
             data = json.load(file)
+            updated = []
             for track in data["tracks"]:
-                sync_track(track["name"])
+                if sync_track(track["name"]):
+                    updated.append(track["name"])
+            return updated
 
-# Automatically syncs all tracks every given seconds.
-def auto_sync(secs):
+# Automatically syncs all tracks every given seconds and shows a notification when a track is synced.
+def auto_sync(secs, notifications=False):
     while True:
-        sync_all()
+        synced = sync_all()
+        if notifications:
+            for track in synced:
+                notify(f"Synced track '{track}'!")
         time.sleep(secs)
 
+# Notifies the user of a synced track.
+def notify(text):
+    toast = ToastNotifier()
+    toast.show_toast("Ghost", text, icon_path=None, duration=5, threaded=True)
+
+# Default function.
+def default():
+    print("G H O S T")
+    notify("Ghost is running!")
+    auto_sync(5, True)
+
+# Runs the program.
 if __name__ == "__main__":
     main(sys.argv)
