@@ -43,6 +43,11 @@ def main(args):
             add_paths(args[2], args[3].split(","))
         else:
             print("Invalid arguments!")
+    elif args[1] == "auto":
+        if len(args) == 3:
+            auto_sync(int(args[2]))
+        else:
+            print("Invalid arguments!")
 
 def make_datafile():
     if not os.path.exists(datafile):
@@ -62,6 +67,7 @@ def show_help():
     print("ghost.py show <name>")
     print("ghost.py show")
     print("ghost.py addpath <name> <paths>")
+    print("ghost.py auto <secs>")
     
 # Finds if the track exists in a JSON file.
 def find_track(track):
@@ -121,33 +127,34 @@ def remove_track(track):
             else:
                 print(f"Track '{track}' does not exist in '{datafile}'!")
 
-# Syncs the last modified file from a track's list of paths.
-def sync_track(track):
+# Syncs the last modified file in a track's paths to all other paths if the file is newer than the last sync time of the track in the JSON file.
+def sync_track(name):
     if os.path.exists(datafile):
         with open(datafile, "r") as file:
             data = json.load(file)
             for track in data["tracks"]:
-                if track["type"] == "file":
-                    last_modified = 0
-                    last_modified_path = ""
+                if track["name"] == name:
+                    lastmod = 0
+                    lastmodpath = ""
                     for path in track["paths"]:
                         if os.path.exists(path):
-                            if os.path.getmtime(path) > last_modified:
-                                last_modified = os.path.getmtime(path)
-                                last_modified_path = path
-                        else:
-                            print(f"Aborting sync for track '{track['name']}': path '{path}' does not exist!")
-                            return
-                    if last_modified_path != "":
+                            if os.path.getmtime(path) > lastmod:
+                                lastmod = os.path.getmtime(path)
+                                lastmodpath = path
+                    if lastmod > track["updated"]:
                         for path in track["paths"]:
-                            if path != last_modified_path:
-                                shutil.copyfile(last_modified_path, path)
+                            if path != lastmodpath:
+                                if os.path.exists(path):
+                                    shutil.copy(lastmodpath, path)
+                                    print(f"Synced '{lastmodpath}' to '{path}'!")
+                                else:
+                                    print(f"Path '{path}' does not exist!")
                         track["updated"] = time.time()
                         with open(datafile, "w") as file:
                             json.dump(data, file)
-                        print(f"Synced track '{track['name']}'!")
-                        return True
-    return False
+                            print(f"Synced track '{track['name']}'!")
+                    else:
+                        print(f"Track '{track['name']}' is up to date!")
 
 # Shows all the track names.
 def show_tracks():
@@ -179,6 +186,12 @@ def sync_all():
             data = json.load(file)
             for track in data["tracks"]:
                 sync_track(track["name"])
+
+# Automatically syncs all tracks every given seconds.
+def auto_sync(secs):
+    while True:
+        sync_all()
+        time.sleep(secs)
 
 if __name__ == "__main__":
     main(sys.argv)
