@@ -6,7 +6,7 @@ import sys
 import time
 import shutil
 
-datafile = "ghost.json"
+datafile = "data.json"
 
 def main(args):
     make_datafile()
