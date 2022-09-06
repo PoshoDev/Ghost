@@ -6,6 +6,8 @@ import sys
 import time
 import shutil
 from win10toast import ToastNotifier
+import pystray
+from PIL import Image
 
 datafile = "data.json"
 
@@ -167,6 +169,17 @@ def show_tracks():
             for track in data["tracks"]:
                 print(track["name"])
 
+# Gets a list of all track names.
+def get_tracks():
+    if os.path.exists(datafile):
+        with open(datafile, "r") as file:
+            data = json.load(file)
+            tracks = []
+            for track in data["tracks"]:
+                tracks.append(track["name"])
+            return tracks
+    return []
+
 # Shows the info for a given track.
 def show_track(name):
     if os.path.exists(datafile):
@@ -195,6 +208,8 @@ def sync_all():
 # Automatically syncs all tracks every given seconds and shows a notification when a track is synced.
 def auto_sync(secs, notifications=False):
     while True:
+        notify("SES!")
+        print("SES!!")
         synced = sync_all()
         if notifications:
             for track in synced:
@@ -204,12 +219,32 @@ def auto_sync(secs, notifications=False):
 # Notifies the user of a synced track.
 def notify(text):
     toast = ToastNotifier()
-    toast.show_toast("Ghost", text, icon_path=None, duration=5, threaded=True)
+    toast.show_toast("Ghost", text, icon_path="icon.png", duration=5, threaded=True)
+
+def tray_clicked(icon, item):
+    opt = str(item)
+    if opt == "Sync All":
+        sync_all()
+    elif opt == "Quit":
+        icon.stop()
+    elif opt in get_tracks():
+        sync_track(opt)
+
 
 # Default function.
 def default():
     print("G H O S T")
     notify("Ghost is running!")
+    image = Image.open("icon.png")
+    submenus = []
+    tracks = get_tracks()
+    for track in tracks:
+        submenus.append(pystray.MenuItem(track, tray_clicked))
+    icon = pystray.Icon("Ghost", image, menu=pystray.Menu(
+        pystray.MenuItem("Sync All", tray_clicked),
+        pystray.MenuItem("Sync Track", pystray.Menu(*submenus)),
+        pystray.MenuItem("Quit", tray_clicked)))
+    icon.run()
     auto_sync(5, True)
 
 # Runs the program.
