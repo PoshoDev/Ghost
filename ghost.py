@@ -5,11 +5,12 @@ import os
 import sys
 import time
 import shutil
-from win10toast import ToastNotifier
+import threading
 import pystray
 from PIL import Image
 
 datafile = "data.json"
+icon = None
 
 def main(args):
     make_datafile()
@@ -208,44 +209,53 @@ def sync_all():
 # Automatically syncs all tracks every given seconds and shows a notification when a track is synced.
 def auto_sync(secs, notifications=False):
     while True:
-        notify("ses", "SES!")
-        print("SES!!")
         synced = sync_all()
         if notifications:
             for track in synced:
                 notify(track, "just finished syncing!")
         time.sleep(secs)
+        os._exit(1)
 
 # Notifies the user of a synced track.
 def notify(text, subtext):
-    toast = ToastNotifier()
-    toast.show_toast(text, subtext, icon_path="icon.ico", duration=5, threaded=True)
+    global icon
+    if icon is not None:
+        icon.notify(subtext, text)
+        time.sleep(3)
+        icon.remove_notification()
 
+# Does the tray menu stuff.
 def tray_clicked(icon, item):
     opt = str(item)
     if opt == "Sync All":
         sync_all()
     elif opt == "Quit":
         icon.stop()
+        os._exit(1)
     elif opt in get_tracks():
         sync_track(opt)
 
+def background_process():
+    time.sleep(1)
+    notify("Ghost", "is running in the background!")
+    auto_sync(60, True)
 
 # Default function.
 def default():
-    print("G H O S T")
+    print("GHOST")
     image = Image.open("icon.png")
     submenus = []
     tracks = get_tracks()
     for track in tracks:
         submenus.append(pystray.MenuItem(track, tray_clicked))
+    global icon
     icon = pystray.Icon("Ghost", image, menu=pystray.Menu(
         pystray.MenuItem("Sync All", tray_clicked),
         pystray.MenuItem("Sync Track", pystray.Menu(*submenus)),
         pystray.MenuItem("Quit", tray_clicked)))
+    thread = threading.Thread(target=background_process)
+    thread.start()
     icon.run()
-    notify("Ghost", "is running!")
-    #auto_sync(5, True)
 
 # Runs the program.
 if __name__ == "__main__":
