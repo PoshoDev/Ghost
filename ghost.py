@@ -208,18 +208,18 @@ def sync_all():
 # Automatically syncs all tracks every given seconds and shows a notification when a track is synced.
 def auto_sync(secs, notifications=False):
     while True:
-        notify("SES!")
+        notify("ses", "SES!")
         print("SES!!")
         synced = sync_all()
         if notifications:
             for track in synced:
-                notify(f"Synced track '{track}'!")
+                notify(track, "just finished syncing!")
         time.sleep(secs)
 
 # Notifies the user of a synced track.
-def notify(text):
+def notify(text, subtext):
     toast = ToastNotifier()
-    toast.show_toast("Ghost", text, icon_path="icon.png", duration=5, threaded=True)
+    toast.show_toast(text, subtext, icon_path="icon.ico", duration=5, threaded=True)
 
 def tray_clicked(icon, item):
     opt = str(item)
@@ -234,7 +234,6 @@ def tray_clicked(icon, item):
 # Default function.
 def default():
     print("G H O S T")
-    notify("Ghost is running!")
     image = Image.open("icon.png")
     submenus = []
     tracks = get_tracks()
@@ -245,7 +244,8 @@ def default():
         pystray.MenuItem("Sync Track", pystray.Menu(*submenus)),
         pystray.MenuItem("Quit", tray_clicked)))
     icon.run()
-    auto_sync(5, True)
+    notify("Ghost", "is running!")
+    #auto_sync(5, True)
 
 # Runs the program.
 if __name__ == "__main__":
