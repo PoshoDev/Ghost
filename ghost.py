@@ -1,5 +1,3 @@
-# Program that syncs a file between two directories.
-
 import json
 import os
 import sys
@@ -12,6 +10,7 @@ from PIL import Image
 datafile = "data.json"
 icon = None
 
+# The main function.
 def main(args):
     make_datafile()
     if len(args) == 1:
@@ -53,6 +52,7 @@ def main(args):
         else:
             print("Invalid arguments!")
 
+# Creates the data file if it doesn't exist.
 def make_datafile():
     if not os.path.exists(datafile):
         with open(datafile, "w") as file:
@@ -60,6 +60,7 @@ def make_datafile():
             data["tracks"] = []
             json.dump(data, file)
 
+# Displays the help.
 def show_help():
     print("Ghost.py - Syncs files between directories.")
     print("Usage:")
@@ -214,12 +215,12 @@ def auto_sync(secs, notifications=False):
             for track in synced:
                 notify(track, "just finished syncing!")
         time.sleep(secs)
-        os._exit(1)
 
 # Notifies the user of a synced track.
 def notify(text, subtext):
     global icon
     if icon is not None:
+        icon.remove_notification()
         icon.notify(subtext, text)
         time.sleep(3)
         icon.remove_notification()
@@ -228,13 +229,16 @@ def notify(text, subtext):
 def tray_clicked(icon, item):
     opt = str(item)
     if opt == "Sync All":
-        sync_all()
+        if not sync_all():
+            notify("Nothing to sync!", "All tracks are up to date!")
     elif opt == "Quit":
         icon.stop()
         os._exit(1)
     elif opt in get_tracks():
-        sync_track(opt)
+        if not sync_track(opt):
+            notify(opt, "is already up to date!")
 
+# The process that will be threaded alongside the tray stuff.
 def background_process():
     time.sleep(1)
     notify("Ghost", "is running in the background!")
