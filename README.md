@@ -7,4 +7,4 @@ Running _ghost.exe_ will execute the program from your system tray, allowing you
 
 Run ```./Ghost.exe help``` for more information.
 
-![](https://raw.githubusercontent.com/PoshoDev/Ghost/main/icon.png)
+<img src="https://raw.githubusercontent.com/PoshoDev/Ghost/main/icon.png" style="zoom:10%;" />
