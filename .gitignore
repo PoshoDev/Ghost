@@ -1,4 +1,7 @@
 data.json
+ghost.spec
+Releases/
+build/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
