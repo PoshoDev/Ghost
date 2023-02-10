@@ -1,0 +1,4 @@
+Pillow==9.4.0
+pystray==0.19.4
+python-xlib==0.33
+six==1.16.0
